@@ -5,7 +5,7 @@ export const initialPlayers = [
   "Stefanos Tsitsipas", "Alexander Zverev", "Andrey Rublev", "Holger Rune",
   "Casper Ruud", "Taylor Fritz", "Frances Tiafoe", "Felix Auger-Aliassime",
   "Hubert Hurkacz", "Cameron Norrie", "Tommy Paul", "Borna Coric",
-  "Lorenzo Musetti", "Alex de Minaur", "Matteo Berrettini", "Denis Shapovalov",
+  "Lorenzo Musetti", "Alex de Minaur", "Matteo Berrettini", "Denis Shapovalev",
   "Karen Khachanov", "Roberto Bautista Agut", "Grigor Dimitrov", "BYE",
   "Sebastian Korda", "Daniel Evans", "Yoshihito Nishioka", "BYE",
   "Ben Shelton", "Miomir Kecmanovic", "Alejandro Davidovich Fokina", "BYE"
@@ -16,31 +16,70 @@ const BYE = "BYE";
 const generateScores = (): { player1Score: number[], player2Score: number[], player1SetsWon: number, player2SetsWon: number } => {
     const p1Scores: number[] = [];
     const p2Scores: number[] = [];
-    let p1SetsWon = 0;
-    let p2SetsWon = 0;
+    let p1SetsWonCount = 0; // how many sets p1 has won
+    let p2SetsWonCount = 0; // how many sets p2 has won
     
-    const p2TargetWins = Math.floor(Math.random() * 3); // 0, 1, or 2 sets for the loser
+    // Player 1 is the pre-determined winner of the match. Player 2 is the loser.
+    // The loser wins a random number of sets (0, 1, or 2).
+    const p2TargetWins = Math.floor(Math.random() * 3); 
 
-    while (p1SetsWon < 3 && p2SetsWon < 3) {
-        let p1SetScore = Math.floor(Math.random() * 6) + 21; // Random score between 21-26
+    // Loop until one player wins 3 sets. We add a safety break to prevent infinite loops.
+    while ((p1SetsWonCount < 3 && p2SetsWonCount < 3) && (p1Scores.length < 8)) {
+        let p1SetScore = Math.floor(Math.random() * 6) + 21;
         let p2SetScore = Math.floor(Math.random() * 6) + 21;
-        if (p1SetScore === p2SetScore) p1SetScore++; // Ensure no ties in a set
+        
+        // 15% chance of a tie set
+        const isTie = Math.random() < 0.15;
 
-        // Assign set winner based on pre-determined match outcome
-        if (p2SetsWon < p2TargetWins) {
-            // Give set to p2
-            if (p1SetScore > p2SetScore) [p1SetScore, p2SetScore] = [p2SetScore, p1SetScore];
-            p2SetsWon++;
+        if (isTie) {
+            p2SetScore = p1SetScore;
+            // Tied sets don't count towards the 3 sets needed to win the match.
         } else {
-            // Give set to p1
-            if (p1SetScore < p2SetScore) [p1SetScore, p2SetScore] = [p2SetScore, p1SetScore];
-            p1SetsWon++;
+            if (p1SetScore === p2SetScore) p1SetScore++; // Avoid accidental ties
+
+            // A set is won by someone. Decide who gets it based on pre-determined outcome.
+            if (p2SetsWonCount < p2TargetWins) {
+                // Give the set win to player 2
+                if (p1SetScore > p2SetScore) {
+                    [p1SetScore, p2SetScore] = [p2SetScore, p1SetScore];
+                }
+                p2SetsWonCount++;
+            } else {
+                // Give the set win to player 1
+                if (p2SetScore > p1SetScore) {
+                    [p1SetScore, p2SetScore] = [p2SetScore, p1SetScore];
+                }
+                p1SetsWonCount++;
+            }
         }
+        
         p1Scores.push(p1SetScore);
         p2Scores.push(p2SetScore);
     }
 
-    return { player1Score: p1Scores, player2Score: p2Scores, player1SetsWon: p1SetsWon, player2SetsWon: p2SetsWon };
+    // Now, calculate the final score according to the new rule:
+    // win = 2 points, tie = 1 point.
+    // The variables player1SetsWon and player2SetsWon will hold these points.
+    let player1Points = 0;
+    let player2Points = 0;
+
+    for (let i = 0; i < p1Scores.length; i++) {
+        if (p1Scores[i] > p2Scores[i]) {
+            player1Points += 2;
+        } else if (p2Scores[i] > p1Scores[i]) {
+            player2Points += 2;
+        } else { // Tie
+            player1Points += 1;
+            player2Points += 1;
+        }
+    }
+
+    return { 
+        player1Score: p1Scores, 
+        player2Score: p2Scores, 
+        player1SetsWon: player1Points, 
+        player2SetsWon: player2Points 
+    };
 };
 
 export const generateBracketData = (players: string[]): { main: BracketNode; thirdPlace: BracketNode } => {

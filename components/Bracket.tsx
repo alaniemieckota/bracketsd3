@@ -20,7 +20,8 @@ export const Bracket: React.FC<BracketProps> = ({ data, highlightedPlayer, onHig
   const svgRef = useRef<SVGSVGElement>(null);
   // FIX: The type `d3.ZoomTransform` may be causing a TypeScript error due to faulty type definitions in `@types/d3`.
   // Using `any` as a pragmatic workaround to ensure compilation without affecting runtime behavior.
-  const transformRef = useRef<any>();
+  // FIX: Provide an initial value to `useRef` to resolve the "Expected 1 arguments, but got 0" error.
+  const transformRef = useRef<any>(undefined);
 
 
   useEffect(() => {
@@ -113,7 +114,7 @@ export const Bracket: React.FC<BracketProps> = ({ data, highlightedPlayer, onHig
     const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
     
     const zoom = d3.zoom<SVGSVGElement, unknown>()
-      .scaleExtent([0.2, 2])
+      .scaleExtent([0.1, 8]) // Increased zoom range for mobile
       .on('zoom', (event) => {
         g.attr('transform', event.transform);
         transformRef.current = event.transform;
