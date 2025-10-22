@@ -1,0 +1,5 @@
+
+{
+  "name": "D3 Sports Bracket Generator",
+  "description": "A dynamic sports bracket application for a 32-player tennis tournament, including support for BYE rounds and a 3rd place match. The bracket is visualized using the D3.js library and styled with Tailwind CSS."
+}
